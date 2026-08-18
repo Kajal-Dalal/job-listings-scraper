@@ -1,0 +1,110 @@
+version: "3.9"
+
+# ============================================================
+# Job Listings Scraper - Docker Compose
+# ============================================================
+# Default: SQLite + app + prometheus + grafana
+# For PostgreSQL: uncomment the 'postgres' service and update DATABASE_URL
+
+services:
+  # ---- Main Application ----
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: job-listings-scraper:latest
+    container_name: job_scraper_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data          # SQLite database persistence
+      - ./logs:/app/logs          # Log file persistence
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/jobs.db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_FORMAT=json
+      - LOG_LEVEL=INFO
+      - ENABLE_METRICS=true
+      - ENABLE_SCHEDULER=true
+      - SCRAPE_INTERVAL_MINUTES=60
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - prometheus
+    networks:
+      - scraper_net
+
+  # ---- Prometheus (Metrics) ----
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: job_scraper_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    networks:
+      - scraper_net
+
+  # ---- Grafana (optional, dashboards) ----
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: job_scraper_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - scraper_net
+
+  # ---- PostgreSQL (optional, uncomment to use) ----
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: job_scraper_postgres
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_DB=jobs_db
+  #     - POSTGRES_USER=scraper
+  #     - POSTGRES_PASSWORD=scraper_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U scraper -d jobs_db"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - scraper_net
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  # postgres_data:
+
+networks:
+  scraper_net:
+    driver: bridge
