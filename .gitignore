@@ -88,9 +88,6 @@ grafana_data/
 *.bloom
 jobs_bloom.pkl
 
-# FreshMart reference project (not part of submission)
-FreshMart-main/
-
 # Temp files
 *.tmp
 *.temp
