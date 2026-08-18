@@ -25,6 +25,7 @@ feedparser==6.0.11
 apscheduler==3.10.4
 
 # Pydantic (Settings + Schemas)
+# Using pre-built wheels compatible with Python 3.11
 pydantic==2.9.2
 pydantic-settings==2.5.2
 
