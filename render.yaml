@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: job-listings-scraper
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./jobs.db
+      - key: API_KEY
+        generateValue: true
+      - key: LOG_FORMAT
+        value: json
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ENABLE_METRICS
+        value: "true"
+      - key: ENABLE_SCHEDULER
+        value: "true"
+      - key: SCRAPE_INTERVAL_MINUTES
+        value: "60"
+      - key: ENABLED_SOURCES
+        value: remoteok,hn_jobs,indeed_rss
+      - key: PYTHON_VERSION
+        value: "3.11.9"
