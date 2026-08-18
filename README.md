@@ -6,6 +6,8 @@
 
 *Acdyon Technologies Engineering Assessment — Part 1*
 
+**🌐 Live Demo:** https://job-listings-scraper-awj6.onrender.com/docs
+
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Tests](https://img.shields.io/badge/Tests-40%20passing-brightgreen?style=flat&logo=pytest)](tests/)
